@@ -1,8 +1,11 @@
 /*
-  BME680CONFIG.cpp - Config library for BME680
+  LEDLIB.cpp - Libreria di esempio per gestire
+  l'accensione, lo spegnimento, e il lampeggio
+  di un LED.
 */
 
-#include "BME680CONFIG.h"  
+#include "BME680CONFIG.h"  // dichiarazione della classe
+
 const uint8_t bsec_config_iaq[] = {
 #include "config/generic_33v_3s_4d/bsec_iaq.txt"
 };
@@ -29,13 +32,15 @@ void BME680CONFIG::setupBME680(void){
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
   };
+  
+
 
   iaqSensor.updateSubscription(sensorList, 10, BSEC_SAMPLE_RATE_LP);
   checkIaqSensorStatus();
 
 }
 
-bmeValues BME680CONFIG::readAndSendValues(void){
+bmeValues BME680CONFIG::getValues(void){
 	 bmeValues bmeValues;
 	  	
 	if (iaqSensor.run()) {   
@@ -53,6 +58,20 @@ bmeValues BME680CONFIG::readAndSendValues(void){
       bmeValues.co2Equivalent= iaqSensor.co2Equivalent;
       bmeValues.breathVocEquivalent = iaqSensor.breathVocEquivalent;
       updateState();
+	  unsigned long now = millis();
+	  output = String(now);
+      output += ", " + String(bmeValues.rawTemperature);
+      output += ", " + String(bmeValues.pressure);
+      output += ", " + String(bmeValues.rawHumidity);
+      output += ", " + String(bmeValues.gasResistance);
+      output += ", " + String(bmeValues.iaq);
+      output += ", " + String(bmeValues.iaqAccuracy);
+      output += ", " + String(bmeValues.temperature);
+      output += ", " + String(bmeValues.humidity);
+      output += ", " + String(bmeValues.staticIaq);
+      output += ", " + String(bmeValues.co2Equivalent);
+      output += ", " + String(bmeValues.breathVocEquivalent);
+	  Serial.println(output);
 	  
     }else{
       checkIaqSensorStatus();
