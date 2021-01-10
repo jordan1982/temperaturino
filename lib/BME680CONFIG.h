@@ -39,7 +39,7 @@ class BME680CONFIG
 	  void errLeds(void);
 	  void loadState(void);
 	  void updateState(void);
-	  bmeValues readAndSendValues(void);
+	  bmeValues getValues(void);
 };
 
 #endif
