@@ -105,7 +105,7 @@ void setupWifiManagerAP(){
   // then goes into a blocking loop awaiting configuration and will return success result
 
   bool res;
-  res = wm.autoConnect("TemperaturinoAPConfig","password!"); // password protected ap
+  res = wm.autoConnect("TemperaturinoAPConfig","temperature2021"); // password protected ap
 
   if(!res) {
       Serial.println("Failed to connect");
@@ -166,27 +166,23 @@ void setup() {
 }
 
 void loop() {
-  
-  
   unsigned long now = millis();
   String delayString = String(read_value_delay_in_minutes);
   int delayValue = delayString.toInt();
-  
+  bmeValues bmeValues = bme680Config.getValues();
   if (now - lastMsg >(delayValue * uS_TO_S_FACTOR)) {
     Serial.print("Delay:");
     Serial.println(delayValue*uS_TO_S_FACTOR);
-
     lastMsg = now;
     Serial.print("LastMsg:");
     Serial.println(lastMsg);
     ++value;
-    snprintf (msg, MSG_BUFFER_SIZE, "Nuovi dati letti, count: #%ld", value);
+    snprintf (msg, MSG_BUFFER_SIZE, "New Data,ready yo send - count: #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
     if (!client.connected()) {
       reconnect();
     }
-    bmeValues bmeValues = bme680Config.readAndSendValues();
     setJsonValues(bmeValues.temperature, bmeValues.humidity, bmeValues.gasResistance, bmeValues.pressure, bmeValues.iaq, bmeValues.iaqAccuracy, bmeValues.staticIaq, bmeValues.co2Equivalent, bmeValues.breathVocEquivalent);
     size_t n = serializeJson(jsonDocument, buffer);
     client.publish("esp32/cameretta/sensor", buffer, n);
