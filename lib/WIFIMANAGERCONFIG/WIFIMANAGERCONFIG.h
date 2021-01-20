@@ -8,27 +8,28 @@ typedef struct
 {
     char mqtt_server[40];
 	char mqtt_port[6];
+	char mqtt_topic[50];
 	char bot_token[150];
 	char telegram_chat_id[40];
 	char send_telegram_notification[5];
 	char read_value_delay_in_minutes[3];
+	char temperature_offset[4];
 	char mqtt_user[30];
 	char mqtt_pwd[50];
-	char *mqttUser;
-	char *mqttPwd;
 }
-configValues;
+WifiManagerConfiguredValues;
 
 
 class WIFIMANAGERCONFIG
 {
    private:
-	  configValues configValues;
+	  
 
 
    public:
+      WifiManagerConfiguredValues configValues;
       void setupWifiManagerAP(void);
-	  configValues getConfiguredValues(void);
+	  WifiManagerConfiguredValues getConfiguredValues(void);
 };
 
 #endif
