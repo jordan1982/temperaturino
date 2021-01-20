@@ -10,15 +10,16 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
-  WiFiManagerParameter custom_mqtt_server("server", "MQTT SERVER IP", mqtt_server, 40);
-  WiFiManagerParameter custom_mqtt_port("port", "MQTT SERVER PORT", mqtt_port, 6);
-  WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT USER", mqtt_user, 30);
-  WiFiManagerParameter custom_mqtt_pwd("mqtt_pwd", "MQTT PWD", mqtt_pwd, 50);
-  WiFiManagerParameter custom_bot_token("telegram_bot_token", "Telegram Bot Token", bot_token, 150);
-  WiFiManagerParameter custom_telegram_chat_id("telegram_chat_id", "Telegram Chat ID", telegram_chat_id, 40);
-  WiFiManagerParameter custom_send_telegram_notification("send_telegram_notification", "Send telegram notification (true/false)", send_telegram_notification, 5);
-  WiFiManagerParameter custom_read_value_delay_in_minutes("read_value_delay_in_minutes", "Read Value Delay in Minutes", read_value_delay_in_minutes, 3);
-
+  WiFiManagerParameter custom_mqtt_server("server", "MQTT SERVER IP", configValues.mqtt_server, 40);
+  WiFiManagerParameter custom_mqtt_port("port", "MQTT SERVER PORT", configValues.mqtt_port, 6);
+  WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT USER", configValues.mqtt_user, 30);
+  WiFiManagerParameter custom_mqtt_pwd("mqtt_pwd", "MQTT PWD", configValues.mqtt_pwd, 50);
+  WiFiManagerParameter custom_mqtt_topic("mqtt_topic", "MQTT TOPIC", configValues.mqtt_topic, 50);
+  WiFiManagerParameter custom_bot_token("telegram_bot_token", "Telegram Bot Token", configValues.bot_token, 150);
+  WiFiManagerParameter custom_telegram_chat_id("telegram_chat_id", "Telegram Chat ID", configValues.telegram_chat_id, 40);
+  WiFiManagerParameter custom_send_telegram_notification("send_telegram_notification", "Send telegram notification (true/false)", configValues.send_telegram_notification, 5);
+  WiFiManagerParameter custom_read_value_delay_in_minutes("read_value_delay_in_minutes", "Read Value Delay in Minutes", configValues.read_value_delay_in_minutes, 3);
+  WiFiManagerParameter custom_temperature_offset("temperature_offset", "Temperature Offset", configValues.temperature_offset, 4);
  
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
@@ -35,10 +36,12 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_user);
   wm.addParameter(&custom_mqtt_pwd);
+  wm.addParameter(&custom_mqtt_topic);
   wm.addParameter(&custom_bot_token);
   wm.addParameter(&custom_telegram_chat_id);
   wm.addParameter(&custom_send_telegram_notification);
   wm.addParameter(&custom_read_value_delay_in_minutes);
+  wm.addParameter(&custom_temperature_offset);
 
   // Automatically connect using saved credentials,
   // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
@@ -59,12 +62,14 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
       strcpy(configValues.mqtt_port, custom_mqtt_port.getValue());
       strcpy(configValues.mqtt_user, custom_mqtt_user.getValue());
       strcpy(configValues.mqtt_pwd, custom_mqtt_pwd.getValue());
+	  strcpy(configValues.mqtt_topic, custom_mqtt_topic.getValue());
       strcpy(configValues.bot_token, custom_bot_token.getValue());
       strcpy(configValues.telegram_chat_id, custom_telegram_chat_id.getValue());
       strcpy(configValues.send_telegram_notification, custom_send_telegram_notification.getValue());
       strcpy(configValues.read_value_delay_in_minutes, custom_read_value_delay_in_minutes.getValue());
-     
-      Serial.print(F("server --> "));
+      strcpy(configValues.temperature_offset, custom_temperature_offset.getValue());
+      
+	  Serial.print(F("server --> "));
       Serial.println(configValues.mqtt_server);
       Serial.print(F("port --> "));
       Serial.println(configValues.mqtt_port);
@@ -72,6 +77,8 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
       Serial.println(configValues.mqtt_user);
       Serial.print(F("mqtt_pwd --> "));
       Serial.println(configValues.mqtt_pwd);
+	  Serial.print(F("mqtt_topic --> "));
+      Serial.println(configValues.mqtt_topic);
       Serial.print(F("bot_token --> "));
       Serial.println(configValues.bot_token);
       Serial.print(F("telegram_chat_id --> "));
@@ -80,7 +87,8 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
       Serial.println(configValues.send_telegram_notification);
       Serial.print(F("read_value_delay_in_minutes --> "));
       Serial.println(configValues.read_value_delay_in_minutes);
-      
+      Serial.print(F("temperature_offset --> "));
+      Serial.println(configValues.temperature_offset);
       
      
   }
@@ -89,7 +97,7 @@ void WIFIMANAGERCONFIG::setupWifiManagerAP(void){
 
 }
 
-configValues WIFIMANAGERCONFIG::getConfiguredValues(void){
+WifiManagerConfiguredValues WIFIMANAGERCONFIG::getConfiguredValues(void){
 	return configValues;
 }
 
