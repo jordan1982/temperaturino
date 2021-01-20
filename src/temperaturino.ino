@@ -1,16 +1,19 @@
 #include <BME680CONFIG.h>
+#include <WIFIMANAGERCONFIG.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <UniversalTelegramBot.h>
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
-#include <WiFiManager.h> 
+//#include <WiFiManager.h> 
 
 
 #define uS_TO_S_FACTOR 10000  /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  20     /* Time ESP32 will go to sleep (in seconds) */
 #define MSG_BUFFER_SIZE  (50)
 
+WIFIMANAGERCONFIG wifiManagerConfig;
+WifiManagerConfiguredValues wifiManagerConfiguredValues;
 BME680CONFIG bme680Config;
 // Helper functions declarations
 void checkIaqSensorStatus(void);
@@ -19,17 +22,19 @@ void loadState(void);
 void updateState(void);
 
 //define your default values here, if there are different values in config.json, they are overwritten.
-char mqtt_server[40];
+/*char mqtt_server[40];
 char mqtt_port[6];
+char mqtt_topic[50];
 char bot_token[150];
 char telegram_chat_id[40];
 char send_telegram_notification[5];
 char read_value_delay_in_minutes[3];
+char temperature_offset[4];
 char mqtt_user[30];
-char mqtt_pwd[50];
+char mqtt_pwd[50];*/
 char *mqttUser;
 char *mqttPwd;
-
+char *mqttTopic;
 WiFiClientSecure espclientSecure;
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -42,7 +47,7 @@ String output;
 StaticJsonDocument<800> jsonDocument;
 char buffer[800];
 
-UniversalTelegramBot bot(bot_token, espclientSecure);
+UniversalTelegramBot bot(wifiManagerConfiguredValues.bot_token, espclientSecure);
 
 
 int i;
@@ -64,7 +69,7 @@ void connectToWiFi() {
 
 }
 
-
+/*
 void setupWifiManagerAP(){
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
@@ -73,12 +78,13 @@ void setupWifiManagerAP(){
   WiFiManagerParameter custom_mqtt_port("port", "MQTT SERVER PORT", mqtt_port, 6);
   WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT USER", mqtt_user, 30);
   WiFiManagerParameter custom_mqtt_pwd("mqtt_pwd", "MQTT PWD", mqtt_pwd, 50);
+  WiFiManagerParameter custom_mqtt_topic("mqtt_topic", "MQTT TOPIC", mqtt_topic, 50);
   WiFiManagerParameter custom_bot_token("telegram_bot_token", "Telegram Bot Token", bot_token, 150);
   WiFiManagerParameter custom_telegram_chat_id("telegram_chat_id", "Telegram Chat ID", telegram_chat_id, 40);
   WiFiManagerParameter custom_send_telegram_notification("send_telegram_notification", "Send telegram notification (true/false)", send_telegram_notification, 5);
   WiFiManagerParameter custom_read_value_delay_in_minutes("read_value_delay_in_minutes", "Read Value Delay in Minutes", read_value_delay_in_minutes, 3);
+  WiFiManagerParameter custom_temperature_offset("temperature_offset", "Temperature Offset", temperature_offset, 4);
 
- 
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
   // WiFi.mode(WiFi_STA); // it is a good practice to make sure your code sets wifi mode how you want it.
@@ -94,10 +100,13 @@ void setupWifiManagerAP(){
   wm.addParameter(&custom_mqtt_port);
   wm.addParameter(&custom_mqtt_user);
   wm.addParameter(&custom_mqtt_pwd);
+  wm.addParameter(&custom_mqtt_topic);
   wm.addParameter(&custom_bot_token);
   wm.addParameter(&custom_telegram_chat_id);
   wm.addParameter(&custom_send_telegram_notification);
   wm.addParameter(&custom_read_value_delay_in_minutes);
+  wm.addParameter(&custom_temperature_offset);
+
 
   // Automatically connect using saved credentials,
   // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
@@ -118,11 +127,13 @@ void setupWifiManagerAP(){
       strcpy(mqtt_port, custom_mqtt_port.getValue());
       strcpy(mqtt_user, custom_mqtt_user.getValue());
       strcpy(mqtt_pwd, custom_mqtt_pwd.getValue());
+      strcpy(mqtt_topic, custom_mqtt_topic.getValue());
       strcpy(bot_token, custom_bot_token.getValue());
       strcpy(telegram_chat_id, custom_telegram_chat_id.getValue());
       strcpy(send_telegram_notification, custom_send_telegram_notification.getValue());
       strcpy(read_value_delay_in_minutes, custom_read_value_delay_in_minutes.getValue());
-     
+      strcpy(temperature_offset, custom_temperature_offset.getValue());
+      
       Serial.print(F("server --> "));
       Serial.println(mqtt_server);
       Serial.print(F("port --> "));
@@ -131,6 +142,8 @@ void setupWifiManagerAP(){
       Serial.println(mqtt_user);
       Serial.print(F("mqtt_pwd --> "));
       Serial.println(mqtt_pwd);
+      Serial.print(F("mqtt_topic --> "));
+      Serial.println(mqtt_topic);
       Serial.print(F("bot_token --> "));
       Serial.println(bot_token);
       Serial.print(F("telegram_chat_id --> "));
@@ -139,11 +152,12 @@ void setupWifiManagerAP(){
       Serial.println(send_telegram_notification);
       Serial.print(F("read_value_delay_in_minutes --> "));
       Serial.println(read_value_delay_in_minutes);
-      
+      Serial.print(F("temperature_offset --> "));
+      Serial.println(temperature_offset);
       
      
   }
-}
+}*/
 
 
 
@@ -152,22 +166,24 @@ void setup() {
   #ifdef ESP8266
   espclientSecure.setInsecure();
   #endif
-
-  setupWifiManagerAP();
-  bme680Config.setupBME680();
+  wifiManagerConfig.setupWifiManagerAP();
+  wifiManagerConfiguredValues = wifiManagerConfig.getConfiguredValues();
+  bme680Config.setupBME680(atof(wifiManagerConfiguredValues.temperature_offset));
   //connectToWiFi();
-  bot.updateToken(bot_token);
-  mqttUser = mqtt_user;
-  mqttPwd = mqtt_pwd;
+  bot.updateToken(wifiManagerConfiguredValues.bot_token);
+  mqttUser = wifiManagerConfiguredValues.mqtt_user;
+  mqttPwd = wifiManagerConfiguredValues.mqtt_pwd;
+  mqttTopic = wifiManagerConfiguredValues.mqtt_topic;
   Serial.println("MqttUser:"+String(mqttUser));
   Serial.println("MqttPwd:"+String(mqttPwd));
-  client.setServer(mqtt_server, atoi(mqtt_port)); 
+  Serial.println("MqttTopic:"+String(mqttTopic));
+  client.setServer(wifiManagerConfiguredValues.mqtt_server, atoi(wifiManagerConfiguredValues.mqtt_port)); 
   
 }
 
 void loop() {
   unsigned long now = millis();
-  String delayString = String(read_value_delay_in_minutes);
+  String delayString = String(wifiManagerConfiguredValues.read_value_delay_in_minutes);
   int delayValue = delayString.toInt();
   bmeValues bmeValues = bme680Config.getValues();
   if (now - lastMsg >(delayValue * uS_TO_S_FACTOR)) {
@@ -185,7 +201,7 @@ void loop() {
     }
     setJsonValues(bmeValues.temperature, bmeValues.humidity, bmeValues.gasResistance, bmeValues.pressure, bmeValues.iaq, bmeValues.iaqAccuracy, bmeValues.staticIaq, bmeValues.co2Equivalent, bmeValues.breathVocEquivalent);
     size_t n = serializeJson(jsonDocument, buffer);
-    client.publish("esp32/cameretta/sensor", buffer, n);
+    client.publish(mqttTopic, buffer, n);
     String messageValue= "IaqAccuracy: "+(String)bmeValues.iaqAccuracy + " - Temperature: " + (String)bmeValues.temperature ; 
     //sendTelegramMessage(messageValue);
     Serial.print(messageValue);
@@ -223,8 +239,8 @@ void reconnect() {
 }
 
 void sendTelegramMessage(String message){
-  if (String(send_telegram_notification) =="true"){
-    bot.sendMessage(telegram_chat_id, message, "");
+  if (String(wifiManagerConfiguredValues.send_telegram_notification) =="true"){
+    bot.sendMessage(wifiManagerConfiguredValues.telegram_chat_id, message, "");
   } 
 }
 
