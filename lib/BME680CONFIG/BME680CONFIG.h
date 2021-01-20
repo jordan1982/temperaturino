@@ -34,12 +34,12 @@ class BME680CONFIG
 
 
    public:
-      void setupBME680(void);
+      void setupBME680(float tempOffset);
       void checkIaqSensorStatus(void);
-	  void errLeds(void);
-	  void loadState(void);
-	  void updateState(void);
-	  bmeValues getValues(void);
+      void errLeds(void);
+      void loadState(void);
+      void updateState(void);
+      bmeValues getValues(void);
 };
 
 #endif
