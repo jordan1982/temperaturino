@@ -1,7 +1,5 @@
 /*
-  LEDLIB.cpp - Libreria di esempio per gestire
-  l'accensione, lo spegnimento, e il lampeggio
-  di un LED.
+  BME680CONFIG.cpp -  Config Library for BME680 Sensor
 */
 
 #include "BME680CONFIG.h"  // dichiarazione della classe
@@ -11,7 +9,7 @@ const uint8_t bsec_config_iaq[] = {
 };
 
 /* funzione di inizializzazione */
-void BME680CONFIG::setupBME680(void){
+void BME680CONFIG::setupBME680(float tempOffset){
   // Sensor setup
   EEPROM.begin(BSEC_MAX_STATE_BLOB_SIZE + 1); // 1st address for the length
   Wire.begin();
@@ -36,6 +34,9 @@ void BME680CONFIG::setupBME680(void){
 
 
   iaqSensor.updateSubscription(sensorList, 10, BSEC_SAMPLE_RATE_LP);
+  
+  iaqSensor.setTemperatureOffset(tempOffset);
+  
   checkIaqSensorStatus();
 
 }
