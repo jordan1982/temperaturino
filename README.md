@@ -1,7 +1,7 @@
 # Temperaturino Sensor
 Firmware for temperature sensor made with d1 mini and bme680
 
-## Prerequisite
+## Prerequisites
 Add a copy of the "BME680Config" and "WiFiManagerConfig" folder libraries into your arduino library folder. 
 For example "E: \ mypath \ Arduino \ libraries ".
 Install wifimanager library:
